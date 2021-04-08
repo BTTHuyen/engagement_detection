@@ -6,7 +6,7 @@ import dlib
 from math import hypot
 from keras.models import load_model
 import csv
-
+import time
 
 from datetime import datetime
 
@@ -99,15 +99,23 @@ class analysis:
         ud_gaze_ratio = (up_side_white+10) / (down_side_white+10)
         return lr_gaze_ratio, ud_gaze_ratio
 
-# Main function for analysis
+# -------------------------------------Main function for analysis----------------------------------
 
     def detect_face(self, frame):
         global temp
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         font = cv2.FONT_HERSHEY_SIMPLEX
         faces = self.detector(gray)
+        #print(len(faces))
         benchmark = []
-
+        
+        emotions = {0: 'Angry', 1: 'Fear', 2: 'Happy',
+                            3: 'Sad', 4: 'Surprised', 5: 'Neutral'}
+                            
+        engagements = {0:'highly engaged', 1: 'engaged', 2:'disengaged'}
+        disengaged = 0
+        engaged = 0
+        highly_engaged = 0           
         if not faces:
             temp = temp + 1
             v1 = str(0)
@@ -122,6 +130,7 @@ class analysis:
                 x, y = face.left(), face.top()
                 x1, y1 = face.right(), face.bottom()
                 f = gray[x:x1, y:y1]
+                
                 cv2.rectangle(frame, (x, y), (x1, y1), (0, 255, 0), 2)
                 landmarks = self.predictor(gray, face)
                 left_point = (landmarks.part(36).x, landmarks.part(36).y)
@@ -152,9 +161,7 @@ class analysis:
                 right_gaze_ratio_lr, right_gaze_ratio_ud = self.get_gaze_ratio(frame,
                                                                 [42, 43, 44, 45, 46, 47], landmarks, gray)
 
-
             #Exp end
-
 
 
                 left_eye_ratio = self.get_blinking_ratio(frame,
@@ -163,54 +170,42 @@ class analysis:
                 left_gaze_ratio_lr, left_gaze_ratio_ud = self.get_gaze_ratio(frame,
                                                                 [36, 37, 38, 39, 40, 41], landmarks, gray)
 
-
             #Exp
                 eye_ratio = max(right_eye_ratio , left_eye_ratio)
                 gaze_ratio_lr = max(left_gaze_ratio_lr , right_gaze_ratio_lr)
                 gaze_ratio_ud = max(left_gaze_ratio_ud , right_gaze_ratio_ud)
+                
+                self.x = gaze_ratio_lr
+                self.y = gaze_ratio_ud
+                self.size = eye_ratio
             #end exp
-
-            # print("\nThis is eye_ratio ", eye_ratio)
-            # print("\nThis is gaze_ratio_lr ", gaze_ratio_lr)
-            # print("\nThis is gaze_ratio_ud ", gaze_ratio_ud)
-            
-           
-
-
-
-
 
                 benchmark.append([gaze_ratio_lr, gaze_ratio_ud, eye_ratio])
                 emotion = self.detect_emotion(gray)
 
-
-
-
+                #concentration index
                 ci = self.gen_concentration_index()
-            # cv2.putText(frame, "x: "+str(gaze_ratio_lr),
-            #             (50, 100), font, 2, (0, 0, 255), 3)
-            # cv2.putText(frame, "y: "+str(gaze_ratio_ud),
-            #             (50, 150), font, 2, (0, 0, 255), 3)
-            # cv2.putText(frame, "Eye Size: "+str(left_eye_ratio),
-            #             (50, 200), font, 2, (0, 0, 255), 3)
-                emotions = {0: 'Angry', 1: 'Fear', 2: 'Happy',
-                            3: 'Sad', 4: 'Surprised', 5: 'Neutral'}
-            # if emotion:
-                cv2.putText(frame, emotions[self.emotion],
-                            (50, 150), font, 2, (0, 0, 255), 3)
-                cv2.putText(frame, ci,
-                            (50, 250), font, 2, (0, 0, 255), 3)
-                self.x = gaze_ratio_lr
-                self.y = gaze_ratio_ud
-                self.size = eye_ratio
-
-                print( "This is gaze ratio lr ", gaze_ratio_lr)
-                print( "This is gaze ratio ud", gaze_ratio_ud)
-                print( "This is eye ratio ", eye_ratio)
                 
-        return frame
+                if ci > 0.6:
+                    highly_engaged +=1
+                    stt = 0
+                    cv2.putText(frame, emotions[self.emotion] + "-" + engagements[stt],
+                            (x, y), font, 1, (255, 255, 0), 2)
+                elif ci > 0.3 and ci <=0.6:
+                    engaged += 1
+                    stt = 1
+                    cv2.putText(frame, emotions[self.emotion] + "-" + engagements[stt],
+                            (x, y), font, 1, (0, 255, 0), 2)
+                else:
+                    disengaged +=1
+                    stt = 2
+                    cv2.putText(frame, emotions[self.emotion] + "-" + engagements[stt],
+                            (x, y), font, 1, (0, 0, 255), 2)
+                
+                
+        return frame,disengaged, engaged, highly_engaged 
 
-# Function for detecting emotion
+# -----------------------Function for detecting emotion-----------------------------------------
 
     def detect_emotion(self, gray):
         global temp
@@ -238,7 +233,6 @@ class analysis:
                 if self.frame_count % 20 == 0:
                     probab = self.emotion_model.predict(test_image)[0] * 100
                     #print("--- %s seconds ---" % (time.time() - start_time))
-
                     # Finding label from probabilities
                     # Class having highest probability considered output label
                     label = np.argmax(probab)
@@ -260,8 +254,7 @@ class analysis:
             # now = datetime.now()
 
             # current_time = now.strftime("%H:%M:%S")
-
-            # print("Distracted at time =", current_time)
+            #print("Distracted at time =", current_time)
 
         self.frame_count += 1
 
@@ -275,6 +268,8 @@ class analysis:
         # Fearful	0.3
         # 0: 'Angry', 1: 'Fear', 2: 'Happy', 3: 'Sad', 4: 'Surprised', 5: 'Neutral'}
 
+
+    #----------------------------------concentration function ------------------------------
     def gen_concentration_index(self):
         global temp 
         weight = 0
@@ -282,29 +277,15 @@ class analysis:
                           3: 0.3, 4: 0.6, 5: 0.9}
 
 
-# 	      Open Semi Close
-# Centre	5	1.5	0
-# Upright	2	1.5	0
-# Upleft	2	1.5	0
-# Right	    2	1.5	0
-# Left	    2	1.5	0
-# Downright	2	1.5	0
-# Downleft	2	1.5	0
+        # 	      Open Semi Close
+        # Centre	5	1.5	0
+        # Upright	2	1.5	0
+        # Upleft	2	1.5	0
+        # Right	    2	1.5	0
+        # Left	    2	1.5	0
+        # Downright	2	1.5	0
+        # Downleft	2	1.5	0
         gaze_weights = 0
-
-        # if self.size < 0.2:
-        #     gaze_weights = 0
-        # elif self.size >= 0.2 and self.size < 0.25:
-        #     gaze_weights = 1.6
-        # elif self.size >= 0.25 and self.size < 0.3:
-        #     gaze_weights = 2
-        # else:
-        #     if ((self.x==1) and (self.y==1) ):
-        #         gaze_weights = 5
-        #     elif (self.x < 2 and self.x > 1) and (self.y < 2 and self.y > 1):
-        #         gaze_weights = 3
-        #     else:
-        #         gaze_weights = 2
 
         if self.size < 0.24:
             gaze_weights = 0
@@ -321,7 +302,7 @@ class analysis:
 # Concentration index is a percentage : max weights product = 4.5
         concentration_index = (
             emotionweights[self.emotion] * gaze_weights) / 4.5
-
+        #print(concentration_index,self.emotion,gaze_weights )
         temp = temp + 1
         v1 = str(concentration_index)
         v2 = str(temp)
@@ -333,10 +314,4 @@ class analysis:
             current_time = now.strftime("%H:%M:%S")
 
             csvwrite.writerows([[v1,v2,current_time]])
-
-        if concentration_index > 0.6:
-            return "You are highly engaged!"
-        elif concentration_index > 0.3 and concentration_index <= 0.6:
-            return "You are engaged."
-        else:
-            return "Pay attention!"
+        return concentration_index
