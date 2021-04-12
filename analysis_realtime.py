@@ -106,18 +106,20 @@ class analysis:
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         font = cv2.FONT_HERSHEY_SIMPLEX
         #faces = self.detector(gray)
-        ######Face recognition
+        ######Face recognition usinng opencv to determine whose face are they
         faces=face_recog.face_detection(encodeFaceList,classNames,frame=gray)
-        #print(len(faces))
+        
         benchmark = []
         
         emotions = {0: 'Angry', 1: 'Fear', 2: 'Happy',
                             3: 'Sad', 4: 'Surprised', 5: 'Neutral'}
                             
         engagements = {0:'highly engaged', 1: 'engaged', 2:'disengaged'}
+        color = {0:(255, 255, 0), 1: (0, 255, 0), 2:(0, 0, 255)}
         disengaged = 0
         engaged = 0
-        highly_engaged = 0           
+        highly_engaged = 0       
+        stt = 0    
         if not faces:
             temp = temp + 1
             v1 = str(0)
@@ -137,6 +139,8 @@ class analysis:
                 self.studentname = studentName
                 print(studentName)
                 face = dlib.rectangle(x,y,x1,y1)
+                
+                
                 
                 f = gray[x:x1, y:y1]
                 cv2.rectangle(frame, (x, y), (x1, y1), (0, 255, 0), 2)
@@ -194,21 +198,28 @@ class analysis:
 
                 ci = self.gen_concentration_index()
                 
+                
                 if ci > 0.6:
                     highly_engaged +=1
                     stt = 0
-                    cv2.putText(frame,self.studentname + "-"+ emotions[self.emotion] + "-" + engagements[stt],
-                            (x, y), font, 0.75, (255, 255, 0), 1)
                 elif ci > 0.3 and ci <=0.6:
                     engaged += 1
                     stt = 1
-                    cv2.putText(frame,self.studentname + "-" + emotions[self.emotion] + "-" + engagements[stt],
-                            (x, y), font, 0.75, (0, 255, 0), 1)
                 else:
                     disengaged +=1
                     stt = 2
-                    cv2.putText(frame,self.studentname + "-" + emotions[self.emotion] + "-" + engagements[stt],
-                            (x, y), font, 0.75, (0, 0, 255), 1)
+                    
+                    
+                #draw label
+                label = self.studentname + "-" + emotions[self.emotion] + "-" + engagements[stt]
+                labelSize=cv2.getTextSize(label,cv2.FONT_HERSHEY_COMPLEX,0.75,1)
+               
+                _x1 = x
+                _y1 = y#+int(labelSize[0][1]/2)
+                _x2 = x+labelSize[0][0]
+                _y2 = y-int(labelSize[0][1])
+                cv2.rectangle(frame,(_x1,_y1),(_x2,_y2),(0,112,0),cv2.FILLED)
+                cv2.putText(frame,label, (x, y), font, 0.75, color[stt], 1)
                 
                 
         return frame,disengaged, engaged, highly_engaged 
@@ -241,7 +252,7 @@ class analysis:
                 if self.frame_count % 20 == 0:
                     probab = self.emotion_model.predict(test_image)[0] * 100
                     #print("--- %s seconds ---" % (time.time() - start_time))
-                    # Finding label from probabilities
+                    # Finding label from  probabilities
                     # Class having highest probability considered output label
                     label = np.argmax(probab)
                     probab_predicted = int(probab[label])
@@ -295,7 +306,7 @@ class analysis:
         # Downleft	2	1.5	0
         gaze_weights = 0
 
-        if self.size < 0.24:
+        '''if self.size < 0.24:
             gaze_weights = 0
         elif self.size >= 0.24 and self.size < 0.28:
             gaze_weights = 1.5
@@ -304,6 +315,16 @@ class analysis:
                 gaze_weights = 5
             elif (self.x < 2 and self.x > 1) and (self.y < 2 and self.y > 1) :
                 gaze_weights = 4
+            else:
+                gaze_weights = 2 '''
+
+        if self.size < 0.2:
+            gaze_weights = 0
+        elif self.size > 0.2 and self.size < 0.3:
+            gaze_weights = 1.5
+        else:
+            if self.x < 2 and self.x > 1:
+                gaze_weights = 5
             else:
                 gaze_weights = 2
 

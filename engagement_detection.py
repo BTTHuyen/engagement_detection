@@ -44,7 +44,7 @@ def visualization(times,vis=0, student_engaged=0, student_disengaged=0, student_
         plt.savefig(savefolder + "/highly_engaged.png")
         plt.clf()
     elif vis == 3: 
-        plt.stackplot(times, student_disengaged,student_engaged,student_highly_engaged, labels=labels)
+        plt.stackplot(times, student_disengaged,student_engaged,student_highly_engaged)
         plt.savefig(savefolder + "/area_chart.png")
         plt.clf()
     #plt.show()
@@ -85,22 +85,21 @@ ana = analysis()
 # Capture every frame and send to detector
 while(cap.isOpened()):
     ret, frame = cap.read()
-    bm, disengaged, engaged, highly_engaged = ana.detect_face(encodeFaceList,classNames,frame)
-    student_disengaged.append(disengaged)
-    student_engaged.append(engaged)
-    student_highly_engaged.append(highly_engaged)
-    # write the frame
-    out.write(frame)
-    cv2.imshow("Frame", frame)
-    video_times.append(round(cap.get(cv2.CAP_PROP_POS_MSEC)/1000,2))
-    #print("video time: ",video_times)
-    
-    
-    print(cap.get(cv2.CAP_PROP_POS_MSEC))
-        ###### draw figure
-        
-# Exit if 'q' is pressed
-    if cv2.waitKey(1000) & 0xFF == ord('q'):
+    if ret == True:
+        bm, disengaged, engaged, highly_engaged = ana.detect_face(encodeFaceList,classNames,frame)
+        student_disengaged.append(disengaged)
+        student_engaged.append(engaged)
+        student_highly_engaged.append(highly_engaged)
+        # write the frame
+        out.write(frame)
+        cv2.imshow("Frame", frame)
+        video_times.append(round(cap.get(cv2.CAP_PROP_POS_MSEC)/1000,2))
+        #print("video time: ",video_times)
+        print(cap.get(cv2.CAP_PROP_POS_MSEC))
+        # Exit if 'q' is pressed
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    else:
         break
 
 #visualize the result
