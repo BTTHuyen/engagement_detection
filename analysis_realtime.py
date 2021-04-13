@@ -106,6 +106,7 @@ class analysis:
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         font = cv2.FONT_HERSHEY_SIMPLEX
         #faces = self.detector(gray)
+        
         ######Face recognition usinng opencv to determine whose face are they
         faces=face_recog.face_detection(encodeFaceList,classNames,frame=gray)
         
@@ -143,7 +144,7 @@ class analysis:
                 
                 
                 f = gray[x:x1, y:y1]
-                cv2.rectangle(frame, (x, y), (x1, y1), (0, 255, 0), 2)
+                #cv2.rectangle(frame, (x, y), (x1, y1), (0, 255, 0), 2)
                 landmarks = self.predictor(gray,face)
                 left_point = (landmarks.part(36).x, landmarks.part(36).y)
                 right_point = (landmarks.part(39).x, landmarks.part(39).y)
@@ -211,15 +212,16 @@ class analysis:
                     
                     
                 #draw label
-                label = self.studentname + "-" + emotions[self.emotion] + "-" + engagements[stt]
-                labelSize=cv2.getTextSize(label,cv2.FONT_HERSHEY_COMPLEX,0.75,1)
+                label = self.studentname + "-" + emotions[self.emotion] + "_" + engagements[stt]
+                labelSize=cv2.getTextSize(label,font,0.5,2)
                
                 _x1 = x
-                _y1 = y#+int(labelSize[0][1]/2)
-                _x2 = x+labelSize[0][0]
-                _y2 = y-int(labelSize[0][1])
-                cv2.rectangle(frame,(_x1,_y1),(_x2,_y2),(0,112,0),cv2.FILLED)
-                cv2.putText(frame,label, (x, y), font, 0.75, color[stt], 1)
+                _y1 = y+5
+                _x2 = x+labelSize[0][0] + 5
+                _y2 = y-int(labelSize[0][1]) - 5
+                cv2.rectangle(frame,(_x1,_y1),(_x2,_y2),color[stt],cv2.FILLED)
+                cv2.rectangle(frame, (x, y), (x1, y1), color[stt], 2)
+                cv2.putText(frame,label, (x, y), font, 0.5, (0,0,0), 1)
                 
                 
         return frame,disengaged, engaged, highly_engaged 

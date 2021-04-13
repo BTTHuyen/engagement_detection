@@ -56,7 +56,7 @@ def face_detection(encodeFaceList,classNames, frame):
     facesCurFrame = face_recognition.face_locations(imgS)
     encodesCurFrame = face_recognition.face_encodings(imgS, facesCurFrame)
     for encodeFace, faceLoc in zip(encodesCurFrame,facesCurFrame):
-        matches = face_recognition.compare_faces(encodeFaceList, encodeFace,tolerance=0.4)
+        matches = face_recognition.compare_faces(encodeFaceList, encodeFace)#,tolerance=0.4
         faceDis = face_recognition.face_distance(encodeFaceList, encodeFace)
         
         matchIndex = np.argmin(faceDis)
@@ -68,9 +68,10 @@ def face_detection(encodeFaceList,classNames, frame):
             y1,x2,y2,x1 = faceLoc
             faceLoc = tuple((x1,y1,x2,y2,name))
             faces.append(faceLoc)
-            cv2.rectangle(frame,(x1,y1), (x2,y2), (0,255,0),2)
-            cv2.rectangle(frame,(x1,y2-35), (x2,y2), (0,255,0),cv2.FILLED)
-            cv2.putText(frame,name,(x1+6,y2-6),cv2.FONT_HERSHEY_COMPLEX,1,(255,255,255),2)
+            #cv2.rectangle(frame,(x1,y1), (x2,y2), (0,255,0),2)
+            
+            #cv2.rectangle(frame,(x1,y2-35), (x2,y2), (0,255,0),cv2.FILLED)
+            #cv2.putText(frame,name,(x1+6,y2-6),cv2.FONT_HERSHEY_COMPLEX,1,(255,255,255),2)
             #markAttendance(name)
 
     return faces
