@@ -116,11 +116,16 @@ class analysis:
                             3: 'Sad', 4: 'Surprised', 5: 'Neutral'}
                             
         engagements = {0:'highly engaged', 1: 'engaged', 2:'disengaged'}
+        
         color = {0:(255, 255, 0), 1: (0, 255, 0), 2:(0, 0, 255)}
-        disengaged = 0
-        engaged = 0
-        highly_engaged = 0       
-        stt = 0    
+        
+        #number of disengaged, engagedn highly engage students on each frame
+        engaged_student = [0]*3 # highly_engaged, engaged, disengaged
+
+        stt = 0    # stt=0: highly engaged student, stt = 1: engaged student, stt=2: disengaged stduent
+        
+        # info of each student: each student will be (student ID, emotion, engaged status)
+        info_std=[]
         if not faces:
             temp = temp + 1
             v1 = str(0)
@@ -196,24 +201,27 @@ class analysis:
                 benchmark.append([gaze_ratio_lr, gaze_ratio_ud, eye_ratio])
                 emotion = self.detect_emotion(gray)
 
-
-                ci = self.gen_concentration_index()
-                
+		#determine engaged student based on concentration index
+                ci = self.gen_concentration_index()     
                 
                 if ci > 0.6:
-                    highly_engaged +=1
+                    engaged_student[0] +=1
                     stt = 0
                 elif ci > 0.3 and ci <=0.6:
-                    engaged += 1
+                    engaged_student[1] += 1
                     stt = 1
                 else:
-                    disengaged +=1
+                    engaged_student[2] +=1
                     stt = 2
                     
-                    
+               
+                #information of each student
+                info_std.append([self.studentname, emotions[self.emotion], engagements[stt]])
+                     
                 #draw label
                 label = self.studentname + "-" + emotions[self.emotion] + "_" + engagements[stt]
                 labelSize=cv2.getTextSize(label,font,0.5,2)
+               
                
                 _x1 = x
                 _y1 = y+5
@@ -223,8 +231,8 @@ class analysis:
                 cv2.rectangle(frame, (x, y), (x1, y1), color[stt], 2)
                 cv2.putText(frame,label, (x, y), font, 0.5, (0,0,0), 1)
                 
-                
-        return frame,disengaged, engaged, highly_engaged 
+        #print(info_std)        
+        return frame,engaged_student, info_std
 
 # -----------------------Function for detecting emotion-----------------------------------------
 
@@ -272,10 +280,7 @@ class analysis:
                 now = datetime.now()
                 current_time = now.strftime("%H:%M:%S")
                 csvwrite.writerows([[v1,v2,current_time]])
-            # now = datetime.now()
-
-            # current_time = now.strftime("%H:%M:%S")
-            #print("Distracted at time =", current_time)
+      
 
         self.frame_count += 1
 

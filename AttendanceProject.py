@@ -59,12 +59,12 @@ while True:
     for encodeFace, faceLoc in zip(encodesCurFrame,facesCurFrame):
         matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
         faceDis = face_recognition.face_distance(encodeListKnown, encodeFace)
-        print(faceLoc)
+        #print(faceLoc)
         matchIndex = np.argmin(faceDis)
 
         if matches[matchIndex]:
             name = classNames[matchIndex].upper()
-            print(name)
+            #print(name)
 
             y1,x2,y2,x1 = faceLoc
             #y1,x2,y2,x1 = y1,x2,y2,x1 
