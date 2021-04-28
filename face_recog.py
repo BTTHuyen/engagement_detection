@@ -9,9 +9,9 @@ import csv
 def findEncoding(images):
     encodeList = []
     for img in images:
-        img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+        #img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
         print(img.shape)
-        img= cv2.resize(img, (512,512), interpolation = cv2.INTER_AREA)
+        #img= cv2.resize(img, (600,512), interpolation = cv2.INTER_AREA)
         #print(img.shape)
         encode = face_recognition.face_encodings(img)[0]
         #print(encode)
@@ -63,7 +63,7 @@ def face_detection(encodeFaceList,classNames, frame):
 
         if matches[matchIndex]:
             name = classNames[matchIndex].upper()
-            print(name,faceDis,matches)
+            print(name)
 
             y1,x2,y2,x1 = faceLoc
             faceLoc = tuple((x1,y1,x2,y2,name))
