@@ -64,16 +64,23 @@ def data_visualization(filename):
 	
 	# list of student name
 	student_name=df.groupby("Student_ID").size().index
-	
+	print(student_name)
 	
 	#visualize for engagement Level:
-	Engagement_Level = df.groupby("frame").size()
-	print(Engagement_Level)
-	#for i in Engagement_Level:
-	#for i in Engagement_Level:
-	print(df[df["Engagement status"]=="engaged"])
-		
-	
+	# list of engagement level
+	Engagement_Level = df.groupby("Engagement status").size().index
+
+
+	for i in Engagement_Level:
+		fig = plt.figure()
+
+		#sort by each engagement level: disengaged, engaged, highly-engaged
+		engagement_stt = df[df["Engagement status"]==i]
+		student= pd.Series(engagement_stt.groupby("frame").size(),name="Engagement Visualization" )
+		print(student)
+		fig = student.plot(subplots=True, figsize=(5, 8),ylabel = "Number of "+ i +" students",
+							xlabel="Times(sec)", title="Engagement Visualization")[0].get_figure()
+		fig.savefig("result/test"+i+".jpg")
 	
 	#visualize the information for each student
 	for i in student_name:
@@ -95,11 +102,11 @@ def engagement_detection(file_name):
 	#Get the Default resolutions
 	frame_width = int(cap.get(3))
 	frame_height = int(cap.get(4))
-	fps = cap.set(cv2.CAP_PROP_FPS, 0)
+	fps = cap.get(cv2.CAP_PROP_FPS)
 	print(fps, cap.get(cv2.CAP_PROP_FPS))
 	# Define the codec and filename.
-	out = cv2.VideoWriter(os.getcwd()+'/result/output_multiface.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 20, (frame_width,frame_height))
-
+	out = cv2.VideoWriter(os.getcwd()+'/result'+ file_name[6:-4] + '.avi',cv2.VideoWriter_fourcc('M','J','P','G'), fps, (frame_width,frame_height))
+	print(os.getcwd()+'/result'+ file_name[6:-4])
 	disengaged_student = []
 	engaged_student = []
 	highly_engaged_student = []
@@ -168,5 +175,5 @@ def engagement_detection(file_name):
 
 	#visualize the result
 
-#engagement_detection('/input/video_2021_3_11_multiface.mp4')
-data_visualization("result/video_2021_3_11_multiface.csv")
+engagement_detection('/input/123CMNR.mp4')
+data_visualization("result/123CMNR.csv")
