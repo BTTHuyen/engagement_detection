@@ -217,11 +217,11 @@ class analysis:
                
                 #information of each student
                 info_std.append([self.studentname, emotions[self.emotion], engagements[stt]])
-                     
+              
                 #draw label
                 label = self.studentname + "-" + emotions[self.emotion] + "_" + engagements[stt]
                 labelSize=cv2.getTextSize(label,font,0.5,2)
-               
+                print(label)
                
                 _x1 = x
                 _y1 = y+5
