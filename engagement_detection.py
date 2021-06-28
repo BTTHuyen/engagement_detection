@@ -64,25 +64,32 @@ def data_visualization(filename):
 	
 	# list of student name
 	student_name=df.groupby("Student_ID").size().index
-	print(student_name)
 	
-	#visualize for engagement Level:
+	
 	# list of engagement level
-	Engagement_Level = df.groupby("Engagement status").size().index
-
-
-	for i in Engagement_Level:
+	Engagement_Level = df.groupby("Engagement status").size()
+	
+	
+	###################sumarization for engagement detection
+	fig = plt.figure()
+	s = df.groupby(["frame","Engagement status"]).size().unstack().fillna(0)
+	s=pd.DataFrame(s,columns=s.columns)
+	print(s)
+	fig = s.plot.area(xticks=range(0,180,20),yticks=range(0,10,1), ylabel="Number of Students", xlabel="Times(sec)", title="Sumarization of Engagement Detection").get_figure()
+	fig.savefig("result/sumarization.jpg")
+	
+	###################visualize for engagement Level:
+	for i in Engagement_Level.index:
 		fig = plt.figure()
-
+		
 		#sort by each engagement level: disengaged, engaged, highly-engaged
 		engagement_stt = df[df["Engagement status"]==i]
 		student= pd.Series(engagement_stt.groupby("frame").size(),name="Engagement Visualization" )
-		print(student)
-		fig = student.plot(subplots=True, figsize=(5, 8),ylabel = "Number of "+ i +" students",
-							xlabel="Times(sec)", title="Engagement Visualization")[0].get_figure()
+		#print(student)
+		fig = student.plot(subplots=True, figsize=(5, 8),ylabel = "Number of "+ i +" students",xlabel="Times(sec)", title="Engagement Visualization")[0].get_figure()
 		fig.savefig("result/test"+i+".jpg")
-	
-	#visualize the information for each student
+		
+	####################visualize the information for each student: pie chart
 	for i in student_name:
 		fig = plt.figure()
     		
@@ -92,8 +99,6 @@ def data_visualization(filename):
 		fig.legend(title = "Engagement Level:",labels=df2.index)
 		fig.savefig("result/"+i+".jpg")
 
-	
-		
 def engagement_detection(file_name):
 
 	# Initializing
@@ -175,5 +180,5 @@ def engagement_detection(file_name):
 
 	#visualize the result
 
-engagement_detection('/input/123CMNR.mp4')
+#engagement_detection('/input/123CMNR.mp4')
 data_visualization("result/123CMNR.csv")
