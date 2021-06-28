@@ -16,48 +16,6 @@ import time
 import pandas as pd
 
 
-def visualization(times,vis=0, disengaged_student=0,output_name ="/Engaged", labels="", savefolder="result",engaged_student=0,highly_engaged_student=0,sizes="",student_ID=""):
-    '''
-    times: the vertical bar
-    vis: type of visualize: 0: student engaged, 1: student disengaged, 2: student highly engaged, 3: stackplot for 3 type of students
-    engaged_student: number of engaged student
-    
-    labels: include 3 type of student we need to show'''
-    fig = plt.figure()
-    width = 0.2  
-    if vis == 0:
-        plt.xlabel('Times(sec)') 
-        plt.ylabel('Number of '+output_name[1:] +" Students") 
-        plt.title('Engagement Visualization')
-        plt.plot(times,disengaged_student)
-        #plt.ylim(0, 11)
-        plt.savefig(savefolder + output_name + ".png")
-        plt.clf()
-        
-    elif vis == 1: 
-    	fig, ax = plt.subplots()
-    	ax.stackplot(times, disengaged_student,engaged_student,highly_engaged_student, labels=labels)
-    	ax.set_title('Engagement Visualization')
-    	ax.set_xlabel('Times(sec)') 
-    	ax.set_ylabel('Number of '+output_name[1:] +" Students")
-    	ax.legend(labels=labels)
-    	plt.ylim(0, 11)
-    	plt.savefig(savefolder + "/engagement.png")
-    	
-    	plt.clf()
-    elif vis == 2:
-    	fig, ax = plt.subplots()
-    	ax.bar(times, disengaged_student, width, color='r')
-    	ax.bar(times, engaged_student, width,bottom=disengaged_student, color='b')
-    	ax.bar(times, highly_engaged_student, width,bottom=engaged_student, color='g')
-    	ax.set_xlabel('Time (sec)')
-    	ax.set_ylabel('Number of student')
-    	ax.set_title('Engagement Visualization')
-    	ax.legend(labels=labels)
-    	plt.ylim(0, 11)
-    	plt.savefig(savefolder +"/combine.png")
-
-
 def data_visualization(filename):
 	data = pd.read_csv(filename,index_col=0)
 	df = pd.DataFrame(data)
@@ -75,7 +33,7 @@ def data_visualization(filename):
 	s = df.groupby(["frame","Engagement status"]).size().unstack().fillna(0)
 	s=pd.DataFrame(s,columns=s.columns)
 	print(s)
-	fig = s.plot.area(xticks=range(0,180,20),yticks=range(0,10,1), ylabel="Number of Students", xlabel="Times(sec)", title="Sumarization of Engagement Detection").get_figure()
+	fig = s.plot.area(xticks=range(0,460,50),yticks=range(0,11,1), ylabel="Number of Students", xlabel="Times(sec)", title="Sumarization of Engagement Detection").get_figure()
 	fig.savefig("result/sumarization.jpg")
 	
 	###################visualize for engagement Level:
@@ -85,16 +43,16 @@ def data_visualization(filename):
 		#sort by each engagement level: disengaged, engaged, highly-engaged
 		engagement_stt = df[df["Engagement status"]==i]
 		student= pd.Series(engagement_stt.groupby("frame").size(),name="Engagement Visualization" )
-		#print(student)
 		fig = student.plot(subplots=True, figsize=(5, 8),ylabel = "Number of "+ i +" students",xlabel="Times(sec)", title="Engagement Visualization")[0].get_figure()
 		fig.savefig("result/test"+i+".jpg")
 		
 	####################visualize the information for each student: pie chart
 	for i in student_name:
+		print(i)
 		fig = plt.figure()
     		
 		df1 = df.loc[i,:]
-		df2 = pd.Series(df1.groupby("Engagement status").size(),name="visualization for "+i)
+		df2 = pd.Series(df1.groupby("Engagement status").size(),name="visualization for "+str(i))
 		fig = df2.plot.pie(subplots=True, figsize=(4, 4),autopct="%.2f%%",labels=None)[0].get_figure()
 		fig.legend(title = "Engagement Level:",labels=df2.index)
 		fig.savefig("result/"+i+".jpg")
@@ -163,13 +121,6 @@ def engagement_detection(file_name):
 		    else:
 		    	break
 
-	#visualize the result
-	visualization(video_times, 0, engaged_student)
-	visualization(video_times, 0, disengaged_student,"/Disengaged")
-	visualization(video_times, 0, highly_engaged_student,"/Highly-engaged")
-	visualization(video_times, 1, disengaged_student,engaged_student=engaged_student, highly_engaged_student = highly_engaged_student, labels=labels)
-	visualization(video_times, 2, disengaged_student,engaged_student=engaged_student, highly_engaged_student = highly_engaged_student, labels=labels)
-
 
 
 	# Release the memory
@@ -180,5 +131,5 @@ def engagement_detection(file_name):
 
 	#visualize the result
 
-#engagement_detection('/input/123CMNR.mp4')
-data_visualization("result/123CMNR.csv")
+engagement_detection('/input/video_2021_3_11_multiface.mp4')
+#data_visualization("result/123CMNR.csv")
